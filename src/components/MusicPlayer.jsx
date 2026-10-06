@@ -4,8 +4,8 @@ const MusicPlayer = () => {
   const audioRef = useRef(null);
 
   useEffect(() => {
-    // Play remo.mpeg fully and continuously
-    audioRef.current = new Audio('/music/remo.mpeg');
+    // Play remo.mp3 fully and continuously (renamed from .mpeg to fix Vercel MIME type issues)
+    audioRef.current = new Audio('/music/remo.mp3');
     audioRef.current.loop = true;
     audioRef.current.volume = 0.5;
 
