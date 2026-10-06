@@ -4,41 +4,50 @@ const MusicPlayer = () => {
   const audioRef = useRef(null);
 
   useEffect(() => {
-    // Play remo.mp3 fully and continuously (renamed from .mpeg to fix Vercel MIME type issues)
-    audioRef.current = new Audio('/music/remo.mp3');
-    audioRef.current.loop = true;
-    audioRef.current.volume = 0.5;
+    if (audioRef.current) {
+      audioRef.current.volume = 0.5;
+    }
 
     const tryPlay = () => {
       if (audioRef.current && audioRef.current.paused) {
-        audioRef.current.play().catch(e => console.log("Audio play failed, waiting for user interaction.", e));
+        audioRef.current.play().catch(e => {
+          console.log("Waiting for user interaction to play audio...");
+        });
+      }
+      
+      // If it successfully started playing, we can remove the listeners
+      if (audioRef.current && !audioRef.current.paused) {
+        document.removeEventListener('click', tryPlay);
+        document.removeEventListener('touchstart', tryPlay);
+        document.removeEventListener('scroll', tryPlay);
       }
     };
 
-    // Try to play automatically
+    // Try automatically first
     tryPlay();
 
-    // Fallback: play on first user interaction (browser autoplay policies)
-    const handleInteraction = () => {
-      tryPlay();
-      document.removeEventListener('click', handleInteraction);
-      document.removeEventListener('touchstart', handleInteraction);
-    };
-
-    document.addEventListener('click', handleInteraction);
-    document.addEventListener('touchstart', handleInteraction);
+    // For mobile: keep listening to ANY interaction until the audio successfully plays
+    document.addEventListener('click', tryPlay);
+    document.addEventListener('touchstart', tryPlay);
+    document.addEventListener('scroll', tryPlay);
 
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      document.removeEventListener('click', handleInteraction);
-      document.removeEventListener('touchstart', handleInteraction);
+      document.removeEventListener('click', tryPlay);
+      document.removeEventListener('touchstart', tryPlay);
+      document.removeEventListener('scroll', tryPlay);
     };
   }, []);
 
-  // Return nothing, so the button is completely removed
-  return null;
+  return (
+    <audio
+      ref={audioRef}
+      src="/music/remo.mp3"
+      loop
+      playsInline
+      preload="auto"
+      style={{ display: 'none' }}
+    />
+  );
 };
 
 export default MusicPlayer;
